@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Galeria de Novelas</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+      margin: 0;
+      padding: 40px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2.5rem;
+      color: #2c3e50;
+      letter-spacing: 1px;
+    }
+
+    .top-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .search-box input {
+      padding: 10px 15px;
+      width: 300px;
+      max-width: 90%;
+      font-size: 1rem;
+      border: 1px solid #cbd2d9;
+      border-radius: 999px;
+      outline: none;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .search-box input:focus {
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .filter-box {
+      font-size: 0.9rem;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-box input {
+      transform: scale(1.1);
+      cursor: pointer;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+    }
+
+    .image-box {
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      max-width: 220px;
+      width: 220px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .image-box:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 18px 30px rgba(15, 23, 42, 0.18);
+    }
+
+    .image-box img {
+  width: 100%;
+  height: 320px;       /* altura fixa para TODAS */
+  object-fit: cover;  /* corta sem distorcer */
+  display: block;
+}
+
+
+    .caption {
+      padding: 8px 10px 4px;
+      font-size: 0.95rem;
+      color: #4b5563;
+    }
+
+    .caption.titulo {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: #111827;
+      padding-top: 10px;
+    }
+
+    .caption.ano {
+      font-size: 0.85rem;
+      color: #6b7280;
+      padding-bottom: 50px;
+    }
+
+    /* Flag de assistido */
+    .flag-assistido {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: #10b981;
+      color: white;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      display: none;
+    }
+
+    .image-box[data-assistido="true"] .flag-assistido {
+      display: inline-block;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 20px 10px;
+      }
+      .image-box {
+        max-width: 100%;
+        width: 100%;
+      }
+      .top-bar {
+        align-items: stretch;
+      }
+      .search-box {
+        display: flex;
+        justify-content: center;
+      }
+      .search-box input {
+        width: 100%;
+      }
+      .filter-box {
+        justify-content: center;
+      }
+    }
+
+    /* --- MODAL --- */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-content {
+      background: #ffffff;
+      padding: 16px 18px 20px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 320px;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.4);
+      animation: fadeIn 0.28s ease-out;
+      position: relative;
+    }
+
+    @media (max-width: 600px) {
+      .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+        padding: 16px 16px 24px;
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 6px;
+    }
+
+    .close {
+      font-size: 22px;
+      color: #4b5563;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 999px;
+      transition: background 0.2s ease;
+    }
+
+    .close:hover {
+      background: #e5e7eb;
+    }
+
+    .modal-image-wrapper {
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .modal-content img {
+      width: 100%;
+      display: block;
+    }
+
+    .modal-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+    }
+
+    .tag-pill {
+      background: #eef2ff;
+      color: #4f46e5;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .tag-pill.secundaria {
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .tag-pill.genero {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .modal-subtitle {
+      font-size: 0.82rem;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .modal-section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      margin: 8px 0 2px;
+    }
+
+    .modal-text {
+      font-size: 0.85rem;
+      color: #4b5563;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .modal-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .btn-trailer {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 15px rgba(79, 70, 229, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+    }
+
+    .btn-trailer:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(79, 70, 229, 0.5);
+    }
+
+    .btn-trailer-icon {
+      font-size: 0.9rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+	
+	.btn-print{
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  background: linear-gradient(to right, #0ea5e9, #2563eb);
+  color: #fff;
+  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.25);
+  transition: transform .15s ease, box-shadow .15s ease, opacity .2s ease;
+}
+
+.btn-print:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.35);
+}
+
+
+/* Área “somente impressão” */
+#print-area{
+  display:none;
+}
+
+/* Quando estiver imprimindo */
+@media print {
+  body{
+    background: #fff !important;
+    padding: 0 !important;
+  }
+
+  /* Esconde o site normal */
+  .top-bar, .container, .modal, h1, #contador-novelas{
+    display:none !important;
+  }
+
+  /* Mostra só a lista */
+  #print-area{
+    display:block !important;
+    padding: 24px;
+    font-family: Arial, sans-serif;
+    color:#111;
+  }
+
+  #print-area h2{
+    margin: 0 0 12px;
+    font-size: 18px;
+  }
+
+  #print-area table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  #print-area th, #print-area td{
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  #print-area th{
+    background: #f3f4f6;
+  }
+}
+  </style>
+</head>
+<body>
+
+  <h1>GALERIA DE NOVELAS</h1>
+
+<button class="btn-print" onclick="imprimirListaPDF()">
+  🖨️ Imprimir / Salvar PDF
+</button>
+
+	<div id="contador-novelas" style="
+  text-align:center;
+  font-size:1.1rem;
+  font-weight:600;
+  margin-bottom:20px;
+  color:#1f2937;
+">
+  Total de Novelas Baixadas: <span id="totalNovelas">0</span>
+</div>
+
+  <div class="top-bar">
+    <div class="search-box">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Buscar novela pelo nome..."
+        onkeyup="aplicarFiltros()">
+    </div>
+
+    <label class="filter-box">
+      <input type="checkbox" id="filtroAssistido" onchange="aplicarFiltros()">
+      Mostrar apenas assistidos
+    </label>
+  </div>
+
+  <div class="container" id="galeria">
+    <!-- NOVELA 1 - assistida -->
+    <div class="image-box"
+         onclick="abrirDetalhes(this)"
+         data-assistido="false"
+         data-sinopse="A história de pessoas cujas vidas se cruzam através de uma criança, explorando amor, culpa e perdão."
+         data-emissora="TV Globo"
+         data-elenco="Regina Duarte, Lilia Cabral, Tarcísio Meira, Ana Paula Arósio"
+         data-genero="Drama, Romance"
+         data-trailer="https://www.youtube.com/watch?v=VIDEO_PAGINAS">
+      <img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\paginas.png" alt="Páginas da Vida">
+      <div class="caption titulo">Páginas da Vida</div>
+      <div class="caption ano">203 cap. • 2006</div>
+      <div class="flag-assistido">✔ Assistido</div>
+    </div>
+
+    <!-- NOVELA 2 - não assistida -->
+    <div class="image-box"
+         onclick="abrirDetalhes(this)"
+         data-assistido="false"
+         data-sinopse="Alunos de um colégio interno lidam com amizade, amores, conflitos familiares e o sucesso de uma banda juvenil."
+         data-emissora="Televisa / SBT"
+         data-elenco="Anahí, Dulce María, Alfonso Herrera, Christopher Uckermann, Maite Perroni, Christian Chávez"
+         data-genero="Drama juvenil, Musical"
+         data-trailer="https://www.youtube.com/watch?v=VIDEO_REBELDE">
+      <img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\rbd.jpg" alt="RBD - REBELDE">
+      <div class="caption titulo">RBD - REBELDE</div>
+      <div class="caption ano">410 cap. • 2008</div>
+      <div class="flag-assistido">✔ Assistido</div>
+    </div>
+
+	<!-- NOVELA 3 - não assistida -->
+    <div class="image-box"
+     onclick="abrirDetalhes(this)"
+     data-assistido="true"
+     data-sinopse="A trama acompanha a jornada de Nina, que retorna ao Brasil em busca de justiça contra sua madrasta Carminha, responsável por grandes traumas de sua infância. A história mistura vingança, romance, drama familiar e muito suspense."
+     data-emissora="TV Globo"
+     data-elenco="Débora Falabella, Adriana Esteves, Murilo Benício, Cauã Reymond, Isis Valverde, Marcello Novaes, Vera Holtz"
+     data-genero="Drama, Suspense, Romance"
+     data-trailer="https://www.youtube.com/watch?v=8bQwZ0pniS4">     
+	<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\avenida.png" alt="Avenida Brasil">
+	<div class="caption titulo">Avenida Brasil</div>
+	<div class="caption ano">179 cap. • 2012</div>
+	<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<div class="image-box"
+     onclick="abrirDetalhes(this)"
+     data-assistido="false"
+     data-sinopse="A história acompanha José Leôncio, um homem marcado por tragédias pessoais, que constrói um império no Pantanal. Anos depois, ele reencontra o filho Joventino, criado longe do pai, dando início a conflitos familiares, romances intensos e elementos místicos ligados à lenda do Velho do Rio."
+     data-emissora="TV Manchete"
+     data-elenco="Cláudio Marzo, Marcos Winter, Cristiana Oliveira, Jussara Freire, Paulo Gorgulho, Cássia Kiss, Osmar Prado"
+     data-genero="Drama, Romance, Regional"
+     data-trailer="https://www.youtube.com/watch?v=ZBf7qz8J9nY">          
+    <img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Pantanal-1990.png" alt="Pantanal">    
+    <div class="caption titulo">PANTANAL</div>
+    <div class="caption ano">187 cap. • 1990</div>
+    <div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- QUATRO POR QUATRO (1994) -->
+<div class="image-box"
+     onclick="abrirDetalhes(this)"
+     data-assistido="false"
+     data-sinopse="Após um acidente de trânsito, quatro mulheres muito diferentes acabam se conhecendo e, depois de terem suas vidas amorosas viradas do avesso, fazem um pacto para se vingar dos homens que as magoaram. Entre armações, reconciliações e novas paixões, a história mistura comédia romântica e guerra dos sexos."
+     data-emissora="TV Globo"
+     data-elenco="Betty Lago, Elizabeth Savalla, Cristiana Oliveira, Letícia Spiller, Humberto Martins, Marcos Paulo, Tato Gabus Mendes, Diogo Vilela"
+     data-genero="Comédia, Romance"
+     data-trailer="https://www.youtube.com/watch?v=2KQoKTLdkHw">
+  <img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\4X4.png" alt="Quatro por Quatro">
+  <div class="caption titulo">QUATRO POR QUATRO</div>
+  <div class="caption ano">233 cap. • 1994</div>
+  <div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- O CLONE (2001) -->
+<div class="image-box"
+     onclick="abrirDetalhes(this)"
+     data-assistido="false"
+     data-sinopse="Lucas e Jade vivem um amor marcado por diferenças culturais entre Brasil e Marrocos. Paralelamente, o cientista Albieri decide clonar um ser humano, criando Léo, o que desencadeia dilemas éticos e emocionais. A trama também aborda dependência química, família e identidade."
+     data-emissora="TV Globo"
+     data-elenco="Giovanna Antonelli, Murilo Benício, Juca de Oliveira, Stênio Garcia, Daniela Escobar, Dalton Vigh, Vera Fischer, Reginaldo Faria"
+     data-genero="Drama, Romance"
+     data-trailer="https://www.youtube.com/watch?v=QIfGje418Ag">
+  <img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\clone.png" alt="O Clone">
+  <div class="caption titulo">O CLONE</div>
+  <div class="caption ano">221 cap. • 2001</div>
+  <div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- AMÉRICA (2005) -->
+<div class="image-box"
+     onclick="abrirDetalhes(this)"
+     data-assistido="false"
+     data-sinopse="Sol sonha em recomeçar a vida nos Estados Unidos e decide atravessar ilegalmente a fronteira. Tião, criado no interior, quer vencer como peão e construir um futuro para a família. Entre desafios, paixões e reviravoltas, a novela fala sobre sonhos, destino e superação."
+     data-emissora="TV Globo"
+     data-elenco="Deborah Secco, Murilo Benício, Caco Ciocler, Camila Morgado, Christiane Torloni, Edson Celulari, Thiago Lacerda, Mariana Ximenes"
+     data-genero="Drama, Romance"
+     data-trailer="https://www.youtube.com/watch?v=rBtY3o9yPPg">
+  <img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\america.png" alt="América">
+  <div class="caption titulo">AMÉRICA</div>
+  <div class="caption ano">203 cap. • 2005</div>
+  <div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- COBRAS & LAGARTOS (2006) -->
+<div class="image-box"
+     onclick="abrirDetalhes(this)"
+     data-assistido="false"
+     data-sinopse="Omar Pasquim construiu um império e decide testar o caráter de quem o cerca. Quando a cobiça toma conta, identidades se confundem, alianças mudam e golpes se multiplicam. Em meio a romance, humor e ação, a história mostra até onde a ambição pode levar."
+     data-emissora="TV Globo"
+     data-elenco="Mariana Ximenes, Daniel de Oliveira, Carolina Dieckmann, Lázaro Ramos, Taís Araújo, Henri Castelli, Marília Pêra, Francisco Cuoco"
+     data-genero="Comédia, Drama, Ação"
+     data-trailer="https://www.youtube.com/watch?v=0H8_6GLXiPw">
+  <img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\cobras.png" alt="Cobras & Lagartos">
+  <div class="caption titulo">COBRAS &amp; LAGARTOS</div>
+  <div class="caption ano">179 cap. • 2006</div>
+  <div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- PARAÍSO TROPICAL -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Gêmeas idênticas e rivais se enfrentam em uma trama de ambição, golpes e paixões no Rio de Janeiro."
+data-emissora="TV Globo"
+data-elenco="Alessandra Negrini, Fábio Assunção, Wagner Moura, Camila Pitanga"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Paraiso+Tropical+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Paraiso_Tropical.png">
+<div class="caption titulo">PARAÍSO TROPICAL</div>
+<div class="caption ano">180 cap. • 2007</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- GERAÇÃO BRASIL -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="No mundo das startups e da tecnologia, jovens talentos e veteranos ambiciosos disputam poder, inovação e sucesso no Brasil digital."
+data-emissora="TV Globo"
+data-elenco="Murilo Benício, Cláudia Abreu, Taís Araújo, Isabelle Drummond, Lázaro Ramos"
+data-genero="Drama, Comédia"
+data-trailer="https://www.youtube.com/results?search_query=Geracao+Brasil+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Geracao_Brasil.jpg">
+<div class="caption titulo">GERAÇÃO BRASIL</div>
+<div class="caption ano">147 cap. • 2014</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+
+<!-- TOTALMENTE DEMAIS -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Uma jovem humilde conquista o mundo da moda ao participar de um concurso, enquanto vive romances e grandes desafios pessoais."
+data-emissora="TV Globo"
+data-elenco="Marina Ruy Barbosa, Juliana Paes, Fábio Assunção, Felipe Simas"
+data-genero="Comédia, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Totalmente+Demais+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Totalmente_Demais.png">
+<div class="caption titulo">TOTALMENTE DEMAIS</div>
+<div class="caption ano">175 cap. • 2015</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- FORÇA DO QUERER – EDIÇÃO ESPECIAL -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Três mulheres têm seus destinos cruzados por ambição, paixão e escolhas intensas que mudam suas vidas para sempre."
+data-emissora="TV Globo"
+data-elenco="Juliana Paes, Paolla Oliveira, Isis Valverde, Rodrigo Lombardi"
+data-genero="Drama"
+data-trailer="https://www.youtube.com/results?search_query=Forca+do+Querer+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Forca_do_Querer.jpg">
+<div class="caption titulo">FORÇA DO QUERER – EDIÇÃO ESPECIAL</div>
+<div class="caption ano">149 cap. • 2020</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- O OUTRO LADO DO PARAÍSO -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Uma jovem injustiçada retorna poderosa para se vingar de todos que destruíram sua vida."
+data-emissora="TV Globo"
+data-elenco="Bianca Bin, Sérgio Guizé, Marieta Severo, Glória Pires"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=O+Outro+Lado+do+Paraiso+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Outro_Lado_do_Paraiso.png">
+<div class="caption titulo">O OUTRO LADO DO PARAÍSO</div>
+<div class="caption ano">172 cap. • 2017</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- A DONA DO PEDAÇO -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="true"
+data-sinopse="Da venda de bolos ao sucesso milionário, Maria da Paz enfrenta traições, golpes e conflitos familiares."
+data-emissora="TV Globo"
+data-elenco="Juliana Paes, Marcos Palmeira, Paolla Oliveira, Agatha Moreira"
+data-genero="Drama"
+data-trailer="https://www.youtube.com/results?search_query=A+Dona+do+Pedaco+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\A_Dona_do_Pedaco.jpg">
+<div class="caption titulo">A DONA DO PEDAÇO</div>
+<div class="caption ano">161 cap. • 2019</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- CAMINHO DAS ÍNDIAS -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="true"
+data-sinopse="Amores proibidos e tradições culturais se chocam entre Brasil e Índia em uma história marcada pela paixão."
+data-emissora="TV Globo"
+data-elenco="Juliana Paes, Rodrigo Lombardi, Tony Ramos, Lima Duarte"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Caminho+das+Indias+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Caminho_das_Indias.png">
+<div class="caption titulo">CAMINHO DAS ÍNDIAS</div>
+<div class="caption ano">203 cap. • 2009</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- A FAVORITA -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="true"
+data-sinopse="Duas mulheres ligadas por um crime do passado travam uma batalha entre mentira, culpa e ambição."
+data-emissora="TV Globo"
+data-elenco="Patrícia Pillar, Cláudia Raia, Cauã Reymond, Mariana Ximenes"
+data-genero="Drama, Suspense"
+data-trailer="https://www.youtube.com/results?search_query=A+Favorita+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\A_Favorita.png">
+<div class="caption titulo">A FAVORITA</div>
+<div class="caption ano">197 cap. • 2008</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- IMPÉRIO -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="true"
+data-sinopse="Um homem que saiu da pobreza constrói um império milionário, mas precisa enfrentar traições e disputas familiares."
+data-emissora="TV Globo"
+data-elenco="Alexandre Nero, Lília Cabral, Marina Ruy Barbosa, Drica Moraes"
+data-genero="Drama"
+data-trailer="https://www.youtube.com/results?search_query=Imperio+novela+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Imperio.png">
+<div class="caption titulo">IMPÉRIO</div>
+<div class="caption ano">203 cap. • 2014</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- MALHAÇÃO – TODA FORMA DE AMAR -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Histórias de jovens marcadas por conflitos, adoção, violência e recomeços emocionais."
+data-emissora="TV Globo"
+data-elenco="Paloma Duarte, Joaquim Lopes, Aline Dias, Duda Pimenta"
+data-genero="Drama, Juventude"
+data-trailer="https://www.youtube.com/results?search_query=Malhacao+Toda+Forma+de+Amar+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Malhacao_Toda_Forma_de_Amar.png">
+<div class="caption titulo">MALHAÇÃO – TODA FORMA DE AMAR</div>
+<div class="caption ano">253 cap. • 2019</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- VERDADES SECRETAS -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Uma jovem entra no mundo da moda e descobre segredos sombrios por trás do glamour."
+data-emissora="TV Globo"
+data-elenco="Camila Queiroz, Rodrigo Lombardi, Drica Moraes, Agatha Moreira"
+data-genero="Drama"
+data-trailer="https://www.youtube.com/results?search_query=Verdades+Secretas+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Verdades_Secretas.png">
+<div class="caption titulo">VERDADES SECRETAS</div>
+<div class="caption ano">64 cap. • 2015</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- INSENSATO CORAÇÃO -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Dois irmãos seguem caminhos opostos entre amor, ambição e crimes, em uma trama marcada por paixões, traições e redenção."
+data-emissora="TV Globo"
+data-elenco="Paolla Oliveira, Eriberto Leão, Gabriel Braga Nunes, Glória Pires, Deborah Secco"
+data-genero="Drama"
+data-trailer="https://www.youtube.com/results?search_query=Insensato+Coracao+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Insensato_Coracao.jpg">
+<div class="caption titulo">INSENSATO CORAÇÃO</div>
+<div class="caption ano">185 cap. • 2011</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- PANTANAL -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="true"
+data-sinopse="No coração do Pantanal, uma saga familiar mistura amor, lendas e conflitos, em meio à força da natureza e paixões intensas."
+data-emissora="TV Globo"
+data-elenco="Marcos Palmeira, Dira Paes, Jesuíta Barbosa, Alanis Guillen, Murilo Benício"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Pantanal+2022+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Pantanal.png">
+<div class="caption titulo">PANTANAL</div>
+<div class="caption ano">167 cap. • 2022</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- I LOVE PARAISÓPOLIS -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Duas amigas enfrentam confusões e romances entre Paraisópolis e o Morumbi, em uma comédia cheia de reviravoltas e emoção."
+data-emissora="TV Globo"
+data-elenco="Bruna Marquezine, Maurício Destri, Caio Castro, Tatá Werneck"
+data-genero="Comédia, Romance"
+data-trailer="https://www.youtube.com/results?search_query=I+Love+Paraisopolis+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\I_Love_Paraisopolis.jpg">
+<div class="caption titulo">I LOVE PARAISÓPOLIS</div>
+<div class="caption ano">154 cap. • 2015</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- SALVE JORGE -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Uma jovem é vítima de uma rede criminosa e, entre perigo e esperança, luta para reencontrar sua vida enquanto um grande amor resiste."
+data-emissora="TV Globo"
+data-elenco="Nanda Costa, Rodrigo Lombardi, Giovanna Antonelli, Cláudia Raia"
+data-genero="Drama, Ação"
+data-trailer="https://www.youtube.com/results?search_query=Salve+Jorge+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Salve_Jorge.png">
+<div class="caption titulo">SALVE JORGE</div>
+<div class="caption ano">179 cap. • 2012</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- MAR DO SERTÃO -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Um homem dado como morto retorna anos depois para reencontrar seu amor, enfrentando segredos e disputas em Canta Pedra."
+data-emissora="TV Globo"
+data-elenco="Sérgio Guizé, Isadora Cruz, Renato Góes, Débora Bloch, José de Abreu"
+data-genero="Comédia, Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Mar+do+Sertao+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Mar_do_Sertao.jpg">
+<div class="caption titulo">MAR DO SERTÃO</div>
+<div class="caption ano">178 cap. • 2022</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- BABILÔNIA -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Ambição e corrupção explodem quando rivais e aliados disputam poder, fortuna e vingança em uma trama de segredos e crimes."
+data-emissora="TV Globo"
+data-elenco="Glória Pires, Adriana Esteves, Camila Pitanga, Bruno Gagliasso"
+data-genero="Drama"
+data-trailer="https://www.youtube.com/results?search_query=Babilonia+novela+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Babilonia.png">
+<div class="caption titulo">BABILÔNIA</div>
+<div class="caption ano">143 cap. • 2015</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- A VIDA DA GENTE -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Duas irmãs veem a vida mudar após um acidente, e precisam enfrentar amor, culpa e recomeços em uma história sensível e emocionante."
+data-emissora="TV Globo"
+data-elenco="Fernanda Vasconcellos, Marjorie Estiano, Rafael Cardoso, Thiago Lacerda"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=A+Vida+da+Gente+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\A_Vida_da_Gente.png">
+<div class="caption titulo">A VIDA DA GENTE</div>
+<div class="caption ano">137 cap. • 2011</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- PASSIONE -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Segredos de família, golpes e traições vêm à tona quando uma poderosa matriarca enfrenta disputas por herança e amores perigosos."
+data-emissora="TV Globo"
+data-elenco="Fernanda Montenegro, Tony Ramos, Mariana Ximenes, Reynaldo Gianecchini"
+data-genero="Drama"
+data-trailer="https://www.youtube.com/results?search_query=Passione+novela+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Passione.jpg">
+<div class="caption titulo">PASSIONE</div>
+<div class="caption ano">209 cap. • 2010</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- TI TI TI -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Dois estilistas rivais transformam a moda em guerra, enquanto romances e armações agitam os bastidores do glamour."
+data-emissora="TV Globo"
+data-elenco="Murilo Benício, Alexandre Borges, Cláudia Raia, Ísis Valverde"
+data-genero="Comédia, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Ti+Ti+Ti+2010+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Ti_Ti_Ti.png">
+<div class="caption titulo">TI TI TI</div>
+<div class="caption ano">209 cap. • 2010</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- SALVE-SE QUEM PUDER -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Três mulheres testemunham um crime e precisam assumir novas identidades, mas o passado e o amor insistem em reaparecer."
+data-emissora="TV Globo"
+data-elenco="Débora Nascimento, Juliana Paiva, Vitória Strada, Bruno Ferrari"
+data-genero="Comédia, Ação, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Salve-se+Quem+Puder+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Salve-se_Quem_Puder.png">
+<div class="caption titulo">SALVE-SE QUEM PUDER</div>
+<div class="caption ano">107 cap. • 2020</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- ÓRFÃOS DA TERRA -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Refugiados fogem da guerra e tentam recomeçar no Brasil, enfrentando traumas e a perseguição de um homem obsessivo."
+data-emissora="TV Globo"
+data-elenco="Julia Dalavia, Renato Góes, Alice Wegmann, Marco Ricca, Eliane Giardini"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Orfaos+da+Terra+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Orfaos_da_Terra.jpg">
+<div class="caption titulo">ÓRFÃOS DA TERRA</div>
+<div class="caption ano">154 cap. • 2019</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- OS DIAS ERAM ASSIM -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Um romance nasce em tempos de ditadura, mas armações e repressão política colocam o casal diante de escolhas difíceis."
+data-emissora="TV Globo"
+data-elenco="Sophie Charlotte, Renato Góes, Daniel de Oliveira, Susana Vieira"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Os+Dias+Eram+Assim+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Os_Dias_Eram_Assim.png">
+<div class="caption titulo">OS DIAS ERAM ASSIM</div>
+<div class="caption ano">88 cap. • 2017</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- O REI DO GADO -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Em meio a disputas por terras, rivalidades familiares e conflitos sociais, um grande amor ressurge no Brasil rural."
+data-emissora="TV Globo"
+data-elenco="Antônio Fagundes, Patricia Pillar, Raul Cortez, Glória Pires, Fábio Assunção"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=O+Rei+do+Gado+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\O_Rei_do_Gado.png">
+<div class="caption titulo">O REI DO GADO</div>
+<div class="caption ano">209 cap. • 1996</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- SANGUE BOM -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Amizade, fama e ambição conectam jovens e famílias em uma trama leve e divertida sobre sucesso, identidade e reviravoltas."
+data-emissora="TV Globo"
+data-elenco="Sophie Charlotte, Marco Pigossi, Isabelle Drummond, Humberto Carrão"
+data-genero="Comédia, Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Sangue+Bom+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\Sangue_Bom.png">
+<div class="caption titulo">SANGUE BOM</div>
+<div class="caption ano">160 cap. • 2013</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+<!-- CORAÇÃO INDOMÁVEL -->
+<div class="image-box" onclick="abrirDetalhes(this)"
+data-assistido="false"
+data-sinopse="Criada na pobreza, uma jovem enfrenta preconceito e vingança, mas encontra amor e força para mudar seu destino."
+data-emissora="Televisa"
+data-elenco="Ana Brenda Contreras, Daniel Arenas, Elizabeth Álvarez, René Strickler"
+data-genero="Drama, Romance"
+data-trailer="https://www.youtube.com/results?search_query=Coracao+Indomavel+trailer">
+<img src="C:\Users\UCEFF\Desktop\Sis_Novelas\CAPAS\s2.png">
+<div class="caption titulo">CORAÇÃO INDOMÁVEL</div>
+<div class="caption ano">162 cap. • 2013</div>
+<div class="flag-assistido">✔ Assistido</div>
+</div>
+
+
+    <!-- Adicione mais novelas copiando os blocos acima -->
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal" id="modalDetalhes">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="close" onclick="fecharModal()">&times;</span>
+      </div>
+
+      <div class="modal-image-wrapper">
+        <img id="modalImagem" alt="Capa da novela">
+      </div>
+
+      <div class="modal-tags">
+        <span class="tag-pill" id="modalEmissora"></span>
+        <span class="tag-pill secundaria" id="modalAno"></span>
+        <span class="tag-pill genero" id="modalGenero"></span>
+      </div>
+
+      <div class="modal-title" id="modalTitulo"></div>
+      <div class="modal-subtitle">Detalhes da novela</div>
+
+      <div class="modal-section-title">Sinopse</div>
+      <p class="modal-text" id="modalSinopse"></p>
+
+      <div class="modal-section-title">Elenco principal</div>
+      <p class="modal-text" id="modalElenco"></p>
+
+      <div class="modal-actions">
+        <button id="modalTrailerBtn" class="btn-trailer">
+          <span class="btn-trailer-icon">▶</span>
+          <span>Ver trailer</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+<div id="print-area">
+  <h2>Lista de Novelas</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Novela</th>
+        <th>Ano</th>
+        <th>Assistido</th>
+      </tr>
+    </thead>
+    <tbody id="print-tbody"></tbody>
+  </table>
+</div>
+
+  <script>
+    // Aplica busca + filtro de assistido
+    function aplicarFiltros() {
+  const texto = document.getElementById('searchInput').value.toLowerCase();
+  const somenteAssistidos = document.getElementById('filtroAssistido').checked;
+  const cards = document.querySelectorAll('.image-box');
+
+  let visiveis = 0;
+
+  cards.forEach(card => {
+    const titulo = card.querySelector('.caption.titulo').textContent.toLowerCase();
+    const assistido = card.dataset.assistido === "true";
+
+    const passaBusca = titulo.includes(texto);
+    const passaAssistido = !somenteAssistidos || assistido;
+
+    if (passaBusca && passaAssistido) {
+      card.style.display = '';
+      visiveis++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  document.getElementById('totalNovelas').textContent = visiveis;
+}
+
+
+    function abrirDetalhes(element) {
+      const img = element.querySelector("img").src;
+      const titulo = element.querySelector(".caption.titulo").textContent;
+      const ano = element.querySelector(".caption.ano").textContent;
+      const sinopse = element.dataset.sinopse || "Sinopse não disponível.";
+      const emissora = element.dataset.emissora || "Emissora não informada";
+      const elenco = element.dataset.elenco || "Elenco não informado";
+      const genero = element.dataset.genero || "";
+      const trailer = element.dataset.trailer || "";
+
+      document.getElementById("modalImagem").src = img;
+      document.getElementById("modalTitulo").textContent = titulo;
+      document.getElementById("modalAno").textContent = ano;
+      document.getElementById("modalEmissora").textContent = emissora;
+      document.getElementById("modalSinopse").textContent = sinopse;
+      document.getElementById("modalElenco").textContent = elenco;
+
+      const generoTag = document.getElementById("modalGenero");
+      if (genero) {
+        generoTag.textContent = genero;
+        generoTag.style.display = "inline-block";
+      } else {
+        generoTag.style.display = "none";
+      }
+
+      const btnTrailer = document.getElementById("modalTrailerBtn");
+      if (trailer) {
+        btnTrailer.style.display = "inline-flex";
+        btnTrailer.onclick = function () {
+          window.open(trailer, "_blank");
+        };
+      } else {
+        btnTrailer.style.display = "none";
+        btnTrailer.onclick = null;
+      }
+
+      document.getElementById("modalDetalhes").style.display = "flex";
+    }
+
+    function fecharModal() {
+      document.getElementById("modalDetalhes").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById("modalDetalhes");
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    };
+	
+  function atualizarContador() {
+    const total = document.querySelectorAll('.image-box').length;
+    document.getElementById('totalNovelas').textContent = total;
+  }
+
+  // Atualiza ao carregar a página
+  document.addEventListener('DOMContentLoaded', atualizarContador);
+
+function imprimirListaPDF() {
+  const tbody = document.getElementById("print-tbody");
+  tbody.innerHTML = "";
+
+  const cards = document.querySelectorAll(".image-box");
+
+  cards.forEach(card => {
+    const tituloEl = card.querySelector(".caption.titulo");
+    const anoEl = card.querySelector(".caption.ano");
+
+    const titulo = tituloEl ? tituloEl.textContent.trim() : "—";
+    const ano = anoEl ? anoEl.textContent.trim() : "—";
+
+    // data-assistido = "true" ou "false"
+    const assistido = (card.dataset.assistido === "true") ? "Sim" : "Não";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${titulo}</td>
+      <td>${ano}</td>
+      <td>${assistido}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  window.print();
+}
+
+	
+  </script>
+</body>
+</html>
